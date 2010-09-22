@@ -29,8 +29,10 @@ def wiki2sentences(wiki, sent_detector, withTags=True):
     oldLen = 1E10
     while len(wiki)<oldLen:
         oldLen = len(wiki)
+        # save the dates...        
+        wiki = re.sub('{+date\|([^{}]*)}+', r'\1',  wiki)
         wiki = re.sub('{[^{}]*}',' ',wiki)
-
+        
     tree = parse_txt(wiki)
     text = tree2string(tree)
     lines = cleanup(text).split('\n')
