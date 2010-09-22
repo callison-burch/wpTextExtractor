@@ -24,7 +24,7 @@ node2markup = dict((n,'') for n in nodeTypes)
 node2markup[nodes.Section]='<s>'
 node2markup[nodes.Item]='<i>'
 
-def wiki2sentences(wiki, sent_detector,withTags=True):
+def wiki2sentences(wiki, sent_detector, withTags=True):
     # get rid of (nested) template calls 
     oldLen = 1E10
     while len(wiki)<oldLen:
@@ -41,8 +41,10 @@ def wiki2sentences(wiki, sent_detector,withTags=True):
             sentences.append(line[3:].strip())
             tags.append('Section')
         elif line.startswith('<i>'):
-            sentences.append(line[3:].strip())
-            tags.append('Item')
+            newSentences = sent_detector(line[3:].strip())
+            sentences += newSentences
+            tags += ['Item-Sentence']*(len(newSentences)-1)
+            tags.append('Item-LastSentence')
         else:
             newSentences = sent_detector(line.strip())
             sentences += newSentences
@@ -59,6 +61,7 @@ def tree2string(tree,trace=False):
     snippets = []
     _tree2string(tree,snippets,trace)
     return ''.join(snippets)
+
 
 def _tree2string(tree,snippets,trace,level=0):
     snippets.append(node2markup[type(tree)])
@@ -77,6 +80,8 @@ def _tree2string(tree,snippets,trace,level=0):
                 return
         elif type(tree)==nodes.TagNode:
             return
+        elif type(tree)==nodes.ImageLink:
+            return
         elif tree.text:
             if trace: print '  '*level,'text:',tree.text.encode('utf-8')
             snippets.append(tree.text)
@@ -85,6 +90,7 @@ def _tree2string(tree,snippets,trace,level=0):
         for node in tree.children:
             _tree2string(node,snippets,trace,level+1)
     except AttributeError: pass
+
 
 def cleanup(text):
     # little hack to change the order of 
