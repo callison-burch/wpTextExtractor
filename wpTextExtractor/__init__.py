@@ -54,7 +54,7 @@ def wikitemplate2text(wiki):
 	wiki = wiki.group(0)[2:-2]
 	lower = wiki.lower()
 	# save languages and dates
-	if lower.startswith('lang') or lower.startswith('date') or lower.startswith('ipa') or lower.startswith('pron'):
+	if lower.startswith('lang') or lower.startswith('date') or lower.startswith('ipa') or lower.startswith('pron') or lower.startswith('nihongo'):
 		barpos = wiki.find('|')
 		if barpos != -1:
 			return wiki.split('|')[1]
