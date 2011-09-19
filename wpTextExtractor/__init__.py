@@ -60,25 +60,32 @@ def wikitemplate2text(wiki):
 			return wiki.split('|')[1]
 	return ''
 
-def wiki2sentences(wiki, sent_detector, withTags=True):
+def wiki2sentences(wiki, sent_detector, withTags=True, withCitations=False):
 	# save the dates (made obsolete by introduction of wikitemplate2text)
 	#wiki = re.sub('{{date\|([^{}]*?)}}', r'\1',  wiki)
 
+	citations = []
 	# repeat since everything can be nested
 	oldLen = 1E10
 	while len(wiki) < oldLen:
 		oldLen = len(wiki)
 		# eliminates html comments. e.g. <--This is a comment-->
 		wiki = re.sub('<!--.*?-->', '', wiki)
+
 		# eliminate wiki tables
 		# commented out because mwlib takes care of them
 		#wiki = re.sub('{\|[^{}]*?\|}', wikitable2text, wiki)
+		
+		# save citations
+		citations.extend(re.findall(r'\{\{cite[^{}]*\}\}', wiki, re.IGNORECASE))
+		citations.extend(re.findall(r'\{\{citation[^{}]*\}\}', wiki, re.IGNORECASE))
+
 		# eliminate wiki templates. e.g. {{date}}
-		wiki = re.sub('{{[^{}]*}}', wikitemplate2text, wiki)
+		wiki = re.sub(r'\{\{[^\{\}]*\}\}', wikitemplate2text, wiki)
 		# eliminate refrence tags. e.g. <ref>text</ref>
-		wiki = re.sub('<ref[^/>]*?>[^<]*?</ref>', '', wiki)
+		wiki = re.sub(r'<ref[^/>]*?>[^<]*?</ref>', '', wiki)
 		# eliminate html tags. e.g. <ref name="My Life"/>
-		wiki = re.sub('</?[A-Za-z][^>]*?>', '', wiki)
+		wiki = re.sub(r'</?[A-Za-z][^>]*?>', '', wiki)
 	
 	# remove angle brackets
 	# mwlib restores the changes, so do nothing.
@@ -106,9 +113,15 @@ def wiki2sentences(wiki, sent_detector, withTags=True):
 			tags += ['Sentence']*(len(newSentences)-1)
 			tags.append('LastSentence')
 	if withTags:
-		return sentences,tags
+		if withCitations:
+			return sentences,tags,citations
+		else:
+			return sentences,tags
 	else:
-		return sentences
+		if withCitations:
+			return sentences,citations
+		else:
+			return sentences
 
 
 
